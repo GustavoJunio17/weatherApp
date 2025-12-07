@@ -16,8 +16,6 @@ import android.widget.ProgressBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import org.json.JSONArray;
@@ -59,6 +57,14 @@ public class MainActivity extends AppCompatActivity {
         loadingIndicator = findViewById(R.id.loadingIndicator);
         weatherArrayAdapter = new WeatherArrayAdapter(this, weatherList);
         weatherListView.setAdapter(weatherArrayAdapter);
+
+        sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+
+        String lastCity = sharedPreferences.getString(LAST_CITY_PREF, null);
+        if (lastCity != null && !lastCity.isEmpty()) {
+            locationEditText.setText(lastCity);
+            getWeatherForCity(lastCity);
+        }
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -122,7 +128,6 @@ public class MainActivity extends AppCompatActivity {
         String baseUrl = getString(R.string.web_service_url);
 
         try {
-            // Formato exigido: url + city + days + APPID
             String urlString = baseUrl + URLEncoder.encode(city, "UTF-8") +
                     "&days=7&APPID=" + apiKey;
             return new URL(urlString);
