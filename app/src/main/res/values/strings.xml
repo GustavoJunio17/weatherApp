@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">WeatherApp</string>
+
+    <string name="api_key">AgentWeather2024_a8f3b9c1d7e2f5g6h4i9j0k1l2m3n4o5p6</string>
+    <string name="web_service_url">http://agent-weathermap-env-env.eba-6pzgqekp.us-east-2.elasticbeanstalk.com/api/weather?city=</string>
+
+    <string name="invalid_url">URL Inválida</string>
+    <string name="read_error">Erro ao ler dados</string>
+    <string name="connect_error">Erro de conexão</string>
+    <string name="hint_text">Cidade, Estado, País (ex: Passos, MG, BR)</string>
+
+    <string name="weather_condition_image">Ícone do tempo</string>
+    <string name="high_temp">Máx: %s</string>
+    <string name="low_temp">Mín: %s</string>
+    <string name="humidity">Umidade: %s</string>
+</resources>
