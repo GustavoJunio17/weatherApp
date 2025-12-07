@@ -1,14 +1,19 @@
 package com.prog3.weatherapp;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.ListView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import org.json.JSONArray;
@@ -25,8 +30,8 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private List<Weather> weatherList = new ArrayList<>();
-    private WeatherArrayAdapter weatherArrayAdapter;
-    private ListView weatherListView;
+    private WeatherAdapter weatherAdapter;
+    private RecyclerView weatherRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,9 +41,10 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        weatherListView = findViewById(R.id.weatherListView);
-        weatherArrayAdapter = new WeatherArrayAdapter(this, weatherList);
-        weatherListView.setAdapter(weatherArrayAdapter);
+        weatherRecyclerView = findViewById(R.id.weatherRecyclerView);
+        weatherAdapter = new WeatherAdapter(this, weatherList);
+        weatherRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        weatherRecyclerView.setAdapter(weatherAdapter);
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -79,6 +85,39 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem toggleThemeItem = menu.findItem(R.id.action_toggle_theme);
+        int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
+            toggleThemeItem.setIcon(R.drawable.ic_sun);
+        } else {
+            toggleThemeItem.setIcon(R.drawable.ic_moon);
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_toggle_theme) {
+            int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+            if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            }
+            recreate();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     private class GetWeatherTask extends AsyncTask<URL, Void, JSONObject> {
         @Override
         protected JSONObject doInBackground(URL... params) {
@@ -109,8 +148,8 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(JSONObject weather) {
             if (weather != null) {
                 convertJSONtoArrayList(weather);
-                weatherArrayAdapter.notifyDataSetChanged();
-                weatherListView.smoothScrollToPosition(0);
+                weatherAdapter.notifyDataSetChanged();
+                weatherRecyclerView.smoothScrollToPosition(0);
             } else {
                 Snackbar.make(findViewById(R.id.coordinatorLayout),
                         R.string.connect_error, Snackbar.LENGTH_LONG).show();
