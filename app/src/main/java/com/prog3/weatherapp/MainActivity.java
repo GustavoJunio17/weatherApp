@@ -2,16 +2,22 @@ package com.prog3.weatherapp;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import org.json.JSONArray;
@@ -53,14 +59,6 @@ public class MainActivity extends AppCompatActivity {
         loadingIndicator = findViewById(R.id.loadingIndicator);
         weatherArrayAdapter = new WeatherArrayAdapter(this, weatherList);
         weatherListView.setAdapter(weatherArrayAdapter);
-
-        sharedPreferences = getPreferences(Context.MODE_PRIVATE);
-
-        String lastCity = sharedPreferences.getString(LAST_CITY_PREF, null);
-        if (lastCity != null && !lastCity.isEmpty()) {
-            locationEditText.setText(lastCity);
-            getWeatherForCity(lastCity);
-        }
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -124,6 +122,7 @@ public class MainActivity extends AppCompatActivity {
         String baseUrl = getString(R.string.web_service_url);
 
         try {
+            // Formato exigido: url + city + days + APPID
             String urlString = baseUrl + URLEncoder.encode(city, "UTF-8") +
                     "&days=7&APPID=" + apiKey;
             return new URL(urlString);
@@ -131,6 +130,39 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem toggleThemeItem = menu.findItem(R.id.action_toggle_theme);
+        int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
+            toggleThemeItem.setIcon(R.drawable.ic_sun);
+        } else {
+            toggleThemeItem.setIcon(R.drawable.ic_moon);
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_toggle_theme) {
+            int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+            if (currentNightMode == Configuration.UI_MODE_NIGHT_YES) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+            }
+            recreate();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private class GetWeatherTask extends AsyncTask<URL, Void, JSONObject> {
