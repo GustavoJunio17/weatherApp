@@ -1,12 +1,15 @@
 package com.prog3.weatherapp;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -27,6 +30,15 @@ public class MainActivity extends AppCompatActivity {
     private List<Weather> weatherList = new ArrayList<>();
     private WeatherArrayAdapter weatherArrayAdapter;
     private ListView weatherListView;
+    private EditText locationEditText;
+    private ProgressBar loadingIndicator;
+
+    private SharedPreferences sharedPreferences;
+    private static final String LAST_CITY_PREF = "last_city";
+
+    private final Handler refreshHandler = new Handler();
+    private Runnable refreshRunnable;
+    private static final long REFRESH_INTERVAL = 5 * 60 * 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,32 +48,75 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        locationEditText = findViewById(R.id.locationEditText);
         weatherListView = findViewById(R.id.weatherListView);
+        loadingIndicator = findViewById(R.id.loadingIndicator);
         weatherArrayAdapter = new WeatherArrayAdapter(this, weatherList);
         weatherListView.setAdapter(weatherArrayAdapter);
+
+        sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+
+        String lastCity = sharedPreferences.getString(LAST_CITY_PREF, null);
+        if (lastCity != null && !lastCity.isEmpty()) {
+            locationEditText.setText(lastCity);
+            getWeatherForCity(lastCity);
+        }
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                EditText locationEditText = findViewById(R.id.locationEditText);
-                URL url = createURL(locationEditText.getText().toString());
-
-                if (url != null) {
-                    dismissKeyboard(locationEditText);
-                    GetWeatherTask getLocalWeatherTask = new GetWeatherTask();
-                    getLocalWeatherTask.execute(url);
-                } else {
-                    Snackbar.make(findViewById(R.id.coordinatorLayout),
-                            R.string.invalid_url, Snackbar.LENGTH_LONG).show();
-                }
+                String city = locationEditText.getText().toString();
+                getWeatherForCity(city);
             }
         });
+
+        setupAutoRefresh();
+    }
+
+    private void getWeatherForCity(String city) {
+        URL url = createURL(city);
+        if (url != null) {
+            dismissKeyboard(locationEditText);
+            GetWeatherTask getLocalWeatherTask = new GetWeatherTask();
+            getLocalWeatherTask.execute(url);
+            sharedPreferences.edit().putString(LAST_CITY_PREF, city).apply();
+        } else {
+            Snackbar.make(findViewById(R.id.coordinatorLayout),
+                    R.string.invalid_url, Snackbar.LENGTH_LONG).show();
+        }
+    }
+
+    private void setupAutoRefresh() {
+        refreshRunnable = new Runnable() {
+            @Override
+            public void run() {
+                String currentCity = sharedPreferences.getString(LAST_CITY_PREF, null);
+                if (currentCity != null && !currentCity.isEmpty()) {
+                    getWeatherForCity(currentCity);
+                }
+                refreshHandler.postDelayed(this, REFRESH_INTERVAL);
+            }
+        };
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        refreshHandler.removeCallbacks(refreshRunnable);
     }
 
     private void dismissKeyboard(View view) {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 
     private URL createURL(String city) {
@@ -69,7 +124,6 @@ public class MainActivity extends AppCompatActivity {
         String baseUrl = getString(R.string.web_service_url);
 
         try {
-            // Formato exigido: url + city + days + APPID
             String urlString = baseUrl + URLEncoder.encode(city, "UTF-8") +
                     "&days=7&APPID=" + apiKey;
             return new URL(urlString);
@@ -80,6 +134,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class GetWeatherTask extends AsyncTask<URL, Void, JSONObject> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            weatherList.clear();
+            weatherArrayAdapter.notifyDataSetChanged();
+            loadingIndicator.setVisibility(View.VISIBLE);
+        }
+
         @Override
         protected JSONObject doInBackground(URL... params) {
             HttpURLConnection connection = null;
@@ -107,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(JSONObject weather) {
+            loadingIndicator.setVisibility(View.GONE);
             if (weather != null) {
                 convertJSONtoArrayList(weather);
                 weatherArrayAdapter.notifyDataSetChanged();
@@ -119,7 +182,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void convertJSONtoArrayList(JSONObject forecast) {
-        weatherList.clear();
         try {
             JSONArray list = forecast.getJSONArray("days");
 
