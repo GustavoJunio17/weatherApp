@@ -1,66 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="8dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp">
+        android:padding="16dp">
 
         <TextView
             android:id="@+id/conditionIconTextView"
-            android:layout_width="@dimen/image_side_length"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="☀️"
-            android:textSize="32sp" />
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="48sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="☀️" />
 
-        <GridLayout
+        <TextView
+            android:id="@+id/dayTextView"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:columnCount="3"
-            android:rowCount="2"
-            android:useDefaultMargins="true">
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:textAppearance="?attr/textAppearanceHeadline5"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/hiTextView"
+            app:layout_constraintStart_toEndOf="@+id/conditionIconTextView"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Wednesday - Sunny" />
 
-            <TextView
-                android:id="@+id/dayTextView"
-                android:layout_column="0"
-                android:layout_columnSpan="3"
-                android:layout_gravity="fill_horizontal"
-                android:text="Day"
-                android:textSize="@dimen/text_size_large"
-                android:textColor="?android:attr/textColor" />
+        <TextView
+            android:id="@+id/humidityTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="?attr/textAppearanceBody1"
+            android:textColor="?android:attr/textColorSecondary"
+            app:layout_constraintStart_toStartOf="@+id/dayTextView"
+            app:layout_constraintTop_toBottomOf="@+id/dayTextView"
+            tools:text="50%" />
 
-            <TextView
-                android:id="@+id/lowTextView"
-                android:layout_row="1"
-                android:layout_column="0"
-                android:layout_columnWeight="1"
-                android:text="Low"
-                android:textSize="@dimen/text_size_small" />
+        <TextView
+            android:id="@+id/hiTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceHeadline5"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="25°" />
 
-            <TextView
-                android:id="@+id/hiTextView"
-                android:layout_row="1"
-                android:layout_column="1"
-                android:layout_columnWeight="1"
-                android:text="High"
-                android:textSize="@dimen/text_size_small" />
+        <TextView
+            android:id="@+id/lowTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textAppearance="?attr/textAppearanceBody1"
+            android:textColor="?android:attr/textColorSecondary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/hiTextView"
+            tools:text="15°" />
 
-            <TextView
-                android:id="@+id/humidityTextView"
-                android:layout_row="1"
-                android:layout_column="2"
-                android:layout_columnWeight="1"
-                android:text="Humidity"
-                android:textSize="@dimen/text_size_small" />
-        </GridLayout>
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
